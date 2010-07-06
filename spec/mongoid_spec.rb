@@ -54,7 +54,7 @@ describe Machinist, "Mongoid::Document adapter" do
   describe "make method" do
     it "should save the constructed object" do
       Person.blueprint { }
-      person = Person.make
+      person = Person.make!
       person.should_not be_new_record
     end
     
@@ -89,38 +89,47 @@ describe Machinist, "Mongoid::Document adapter" do
   
   describe "plan method" do
     it "should not save the constructed object" do
-      person_count = Person.count
-      Person.blueprint { }
-      person = Person.plan
-      Person.count.should == person_count
+      pending
+      #plan is not defined in machinist 2.0
+      
+      # person_count = Person.count
+      #      Person.blueprint { }
+      #      person = Person.plan
+      #      Person.count.should == person_count
     end
     
     it "should return a regular attribute in the hash" do
-      Post.blueprint { title "Test" }
-      post = Post.plan
-      post[:title].should == "Test"
+      pending
+      #plan is not defined in machinist 2.0
+      
+      # Post.blueprint { title "Test" }
+      #       post = Post.plan
+      #       post[:title].should == "Test"
     end
     
     it "should create an object through a embedded_in association, and return its id" do
-      Post.blueprint { }
-      Comment.blueprint { post }
-      post_count = Post.count
-      comment = Comment.plan
-      Post.count.should == post_count + 1
-      comment[:post].should be_nil
-      comment[:post_id].should_not be_nil
+      pending
+      #plan is not defined in machinist 2.0
+      
+      # Post.blueprint { }
+      #       Comment.blueprint { post }
+      #       post_count = Post.count
+      #       comment = Comment.plan
+      #       Post.count.should == post_count + 1
+      #       comment[:post].should be_nil
+      #       comment[:post_id].should_not be_nil
     end
 
     context "attribute assignment" do 
       it "should allow assigning a value to an attribute" do
-        Post.blueprint { title "1234" }
-        post = Post.make
+        Post.blueprint { title {"1234"} }
+        post = Post.make!
         post.title.should == "1234"
       end
 
       it "should allow arbitrary attributes on the base model in its blueprint" do
-        Post.blueprint { foo "bar" }
-        post = Post.make
+        Post.blueprint { foo {"bar"} }
+        post = Post.make!
         post.foo.should == "bar"
       end
     end
@@ -129,7 +138,7 @@ describe Machinist, "Mongoid::Document adapter" do
   describe "make_unsaved method" do
     it "should not save the constructed object" do
       Person.blueprint { }
-      person = Person.make_unsaved
+      person = Person.make
       person.should be_new_record
     end
     
@@ -142,12 +151,15 @@ describe Machinist, "Mongoid::Document adapter" do
     end
     
     it "should save objects made within a passed-in block" do
-      Post.blueprint { }
-      Comment.blueprint { }
-      comment = nil
-      post = Post.make_unsaved { comment = Comment.make }
-      post.should be_new_record
-      comment.should_not be_new_record
+      pending
+      # Machinist 2.0 does not execute a block for make anymore
+       
+      # Post.blueprint { }
+      #       Comment.blueprint { }
+      #       comment = nil
+      #       post = Post.make { comment = Comment.make! }
+      #       post.should be_new_record
+      #       comment.should_not be_new_record
     end
   end
   
@@ -167,7 +179,7 @@ describe Machinist, "Mongoid::Document adapter" do
     end
 
     it "should allow arbitrary attributes on the base model in its blueprint" do
-      Address.blueprint { foo "bar" }
+      Address.blueprint { foo {"bar"} }
       addr = Address.make
       addr.foo.should == "bar"
     end

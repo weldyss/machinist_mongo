@@ -38,6 +38,15 @@ module Machinist
       def outside_transaction
         yield
       end
+      
+      def box(object)
+        object.id
+      end
+
+      # Unbox an object from the warehouse.
+      def unbox(id)
+        @klass.find(id)
+      end
     end
     
     class Lathe < Machinist::Lathe
@@ -56,6 +65,15 @@ module Machinist
           association.klass.make(*args)
         else
           raise_argument_error(attribute)
+        end
+      end
+      
+      def assign_attribute(key, value)
+        @assigned_attributes[key.to_sym] = value
+        if @object.respond_to?("#{key}=")
+          @object.send("#{key}=", value)
+        else
+          @object.process(key => value)
         end
       end
     end
