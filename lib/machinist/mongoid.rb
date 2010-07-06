@@ -8,19 +8,22 @@ rescue LoadError
   exit
 end
 
-module Mongoid #:nodoc:
-  module Document #:nodoc:
-    extend Machinist::Machinable
-    def self.blueprint_class
-      Machinist::Mongoid::Blueprint
-    end
-  end
-end
-
 module Machinist
   
   module Mongoid
-    class Blueprint
+    
+    module Machinable
+      extend ActiveSupport::Concern
+      
+      module ClassMethods
+        include Machinist::Machinable
+        def blueprint_class
+          Machinist::Mongoid::Blueprint
+        end
+      end
+    end
+    
+    class Blueprint < Machinist::Blueprint
       
       def make!(attributes = {})
         object = make(attributes)
@@ -31,72 +34,40 @@ module Machinist
       def lathe_class #:nodoc:
         Machinist::Mongoid::Lathe
       end
+      
+      def outside_transaction
+        yield
+      end
     end
     
-    class Lathe
-      def assign_attribute(key, value)
-        assigned_attributes[key.to_sym] = value
-        if @object.respond_to?("#{key}=")
-          @object.send("#{key}=", value)
+    class Lathe < Machinist::Lathe
+      def make_one_value(attribute, args) #:nodoc:
+        if block_given?
+          raise_argument_error(attribute) unless args.empty?
+          yield
         else
-          @object.process(key => value)
+          make_association(attribute, args)
+        end
+      end
+      
+      def make_association(attribute, args) #:nodoc:
+        p attribute
+        p @klass.associations
+        association = @klass.associations[attribute.to_s]
+        p association
+        if association
+          association.klass.make(*args)
+        else
+          raise_argument_error(attribute)
         end
       end
     end
   end
-  
-  # class MongoidAdapter
-  #    class << self
-  #      def has_association?(object, attribute)
-  #        object.class.associations[attribute.to_s]
-  #      end
-  #      
-  #      def class_for_association(object, attribute)
-  #        association = object.class.associations[attribute.to_s]
-  #        association && association.klass
-  #      end
-  # 
-  #      def assigned_attributes_without_associations(lathe)
-  #        attributes = {}
-  #        lathe.assigned_attributes.each_pair do |attribute, value|
-  #          association = lathe.object.class.associations[attribute.to_s]
-  #          if association && (association.macro == :belongs_to_related) && !value.nil?
-  #            attributes[association.foreign_key.to_sym] = value.id
-  #          else
-  #            attributes[attribute] = value
-  #          end
-  #        end
-  #        attributes        
-  #      end      
-  #    end
-  #  end
-  #  
-  #  module MongoidExtensions
-  #    module Document
-  #      def make(*args, &block)
-  #        lathe = Lathe.run(Machinist::MongoidAdapter, self.new, *args)
-  #        unless Machinist.nerfed? || embedded
-  #          lathe.object.save!
-  #          lathe.object.reload
-  #        end
-  #        lathe.object(&block)
-  #      end
-  #      
-  #      
-  #      
-  #      def make_unsaved(*args)
-  #        returning(Machinist.with_save_nerfed { make(*args) }) do |object|
-  #          yield object if block_given?
-  #        end
-  #      end
-  #      
-  #      def plan(*args)
-  #        lathe = Lathe.run(Machinist::MongoidAdapter, self.new, *args)
-  #        Machinist::MongoidAdapter.assigned_attributes_without_associations(lathe)
-  #      end
-  #    end
-  #  end
 end
 
+module Mongoid #:nodoc:
+  module Document #:nodoc:
+    include Machinist::Mongoid::Machinable
+  end
+end
 
-#Mongoid::Document::ClassMethods.send(:include, Machinist::MongoidExtensions::Document)
