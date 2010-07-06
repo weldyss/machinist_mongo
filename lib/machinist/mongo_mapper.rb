@@ -1,85 +1,82 @@
 require "machinist"
-require "machinist/blueprint"
+require "machinist/machinable"
+
 begin
-  require "mongo_mapper"
-  require "mongo_mapper/embedded_document"
+  require "mongoid"
 rescue LoadError
-  puts "MongoMapper is not installed (gem install mongo_mapper)"
+  puts "Mongoid is not installed (gem install mongoid)"
   exit
 end
 
 module Machinist
-
-  class Lathe
-    def assign_attribute(key, value)
-      assigned_attributes[key.to_sym] = value
-      if @object.respond_to? "#{key}="
-        @object.send("#{key}=", value)
-      else
-        @object[key] = value
+  
+  module Mongoid
+    
+    module Machinable
+      extend ActiveSupport::Concern
+      
+      module ClassMethods
+        include Machinist::Machinable
+        def blueprint_class
+          Machinist::Mongoid::Blueprint
+        end
       end
     end
-  end
+    
+    class Blueprint < Machinist::Blueprint
+      
+      def make!(attributes = {})
+        object = make(attributes)
+        object.save!
+        object.reload
+      end
+      
+      def lathe_class #:nodoc:
+        Machinist::Mongoid::Lathe
+      end
+      
+      def outside_transaction
+        yield
+      end
+      
+      def box(object)
+        object.id
+      end
 
-  class MongoMapperAdapter
-    def self.has_association?(object, attribute)
-      object.class.associations[attribute]
+      # Unbox an object from the warehouse.
+      def unbox(id)
+        @klass.find(id)
+      end
     end
-
-    def self.class_for_association(object, attribute)
-      association = object.class.associations[attribute]
-      association && association.klass
-    end
-
-    def self.assigned_attributes_without_associations(lathe)
-      attributes = {}
-      lathe.assigned_attributes.each_pair do |attribute, value|
-        association = lathe.object.class.associations[attribute]
-        if association && association.belongs_to? && !value.nil?
-          attributes[association.foreign_key.to_sym] = value.id
+    
+    class Lathe < Machinist::Lathe
+      def make_one_value(attribute, args) #:nodoc:
+        if block_given?
+          raise_argument_error(attribute) unless args.empty?
+          yield
         else
-          attributes[attribute] = value
+          make_association(attribute, args)
         end
       end
-      attributes
-    end
-  end
-
-  module MongoMapperExtensions
-    module Document
-      def make(*args, &block)
-        lathe = Lathe.run(Machinist::MongoMapperAdapter, self.new, *args)
-        unless Machinist.nerfed?
-          lathe.object.save!
-          lathe.object.reload
+      
+      def make_association(attribute, args) #:nodoc:
+        p attribute
+        p @klass.associations
+        association = @klass.associations[attribute.to_s]
+        p association
+        if association
+          association.klass.make(*args)
+        else
+          raise_argument_error(attribute)
         end
-        lathe.object(&block)
-      end
-
-      def make_unsaved(*args)
-        returning(Machinist.with_save_nerfed { make(*args) }) do |object|
-          yield object if block_given?
-        end
-      end
-
-      def plan(*args)
-        lathe = Lathe.run(Machinist::MongoMapperAdapter, self.new, *args)
-        Machinist::MongoMapperAdapter.assigned_attributes_without_associations(lathe)
-      end
-    end
-
-    module EmbeddedDocument
-
-      def make(*args, &block)
-        lathe = Lathe.run(Machinist::MongoMapperAdapter, self.new, *args)
-        lathe.object(&block)
       end
     end
   end
 end
 
-MongoMapper::Document.append_extensions(Machinist::Blueprints::ClassMethods)
-MongoMapper::Document.append_extensions(Machinist::MongoMapperExtensions::Document)
+module Mongoid #:nodoc:
+  module Document #:nodoc:
+    include Machinist::Mongoid::Machinable
+  end
+end
 
-MongoMapper::EmbeddedDocument.append_extensions(Machinist::Blueprints::ClassMethods)
-MongoMapper::EmbeddedDocument.append_extensions(Machinist::MongoMapperExtensions::EmbeddedDocument)
