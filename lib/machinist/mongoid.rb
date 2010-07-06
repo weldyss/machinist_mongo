@@ -1,5 +1,5 @@
 require "machinist"
-require "machinist/blueprints"
+require "machinist/blueprint"
 
 begin
   require "mongoid"

@@ -1,5 +1,5 @@
 require "machinist"
-require "machinist/blueprints"
+require "machinist/blueprint"
 begin
   require "mongo_mapper"
   require "mongo_mapper/embedded_document"
