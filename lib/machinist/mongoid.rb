@@ -9,7 +9,7 @@ rescue LoadError
 end
 
 module Mongoid #:nodoc:
-  class Document #:nodoc:
+  module Document #:nodoc:
     extend Machinist::Machinable
     def self.blueprint_class
       Machinist::Mongoid::Blueprint
