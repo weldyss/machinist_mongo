@@ -79,5 +79,6 @@ end
 
 MongoMapper::Document.append_extensions(Machinist::Blueprints::ClassMethods)
 MongoMapper::Document.append_extensions(Machinist::MongoMapperExtensions::Document)
-MongoMapper::EmbeddedDocument::ClassMethods.send(:include, Machinist::Blueprints::ClassMethods)
-MongoMapper::EmbeddedDocument::ClassMethods.send(:include, Machinist::MongoMapperExtensions::EmbeddedDocument)
+
+MongoMapper::EmbeddedDocument.append_extensions(Machinist::Blueprints::ClassMethods)
+MongoMapper::EmbeddedDocument.append_extensions(Machinist::MongoMapperExtensions::EmbeddedDocument)
