@@ -12,7 +12,11 @@ module Machinist
   class Lathe
     def assign_attribute(key, value)
       assigned_attributes[key.to_sym] = value
-      @object.process(key => value)
+      if @object.respond_to?("#{key}=")
+        @object.send("#{key}=", value)
+      else
+        @object.process(key => value)
+      end
     end
   end
   
@@ -54,7 +58,7 @@ module Machinist
       end
       
       def make_unsaved(*args)
-        returning(Machinist.with_save_nerfed { make(*args) }) do |object|
+        Machinist.with_save_nerfed { make(*args) }.tap do |object|
           yield object if block_given?
         end
       end
