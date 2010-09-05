@@ -1,3 +1,4 @@
 .DS_Store
 pkg
 machinist_mongo*.gem
+.bundle
