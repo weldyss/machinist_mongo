@@ -10,7 +10,7 @@ begin
     gem.summary = %Q{Machinist adapters for MongoDB ORMs}
     gem.email = "nicolas.merouze@gmail.com"
     gem.homepage = "http://github.com/nmerouze/machinist_mongo"
-    gem.authors = ["Nicolas Mérouze", "Cyril Mougel"]
+    gem.authors = ["Nicolas Merouze", "Cyril Mougel"]
     gem.files = Dir["README.md", "LICENSE", "lib/**/*"]
 
     gem.add_dependency('machinist',  '~> 2.0.0.beta2')
