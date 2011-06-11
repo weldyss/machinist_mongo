@@ -17,7 +17,6 @@ Gem::Specification.new do |s|
   ]
   s.files = [
     "LICENSE",
-     "lib/machinist/mongo_mapper.rb",
      "lib/machinist/mongoid.rb"
   ]
   s.homepage = %q{http://github.com/nmerouze/machinist_mongo}
@@ -26,7 +25,6 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{Machinist adapters for MongoDB ORMs}
   s.test_files = [
-    "spec/mongo_mapper_spec.rb",
      "spec/mongoid_spec.rb",
      "spec/spec_helper.rb"
   ]
